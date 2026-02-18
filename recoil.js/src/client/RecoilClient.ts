@@ -1,0 +1,293 @@
+/**
+ * @module recoil.js/client/RecoilClient
+ * The main entry point for the recoil.js library.
+ *
+ * @packageDocumentation
+ */
+
+import { EventEmitter } from 'events';
+import type { ClientOptions } from './ClientOptions';
+import { DefaultClientOptions } from './ClientOptions';
+import type { ClientEvents } from './ClientEvents';
+import { RESTManager } from '../rest/RESTManager';
+import { ServerManager } from '../managers/ServerManager';
+import { ClientUser } from '../structures/User';
+import { IntentsBitField, Intents } from '../util/Intents';
+import { Events } from '../util/Events';
+import { Gateway } from '../gateway/Gateway';
+import type { APIBotUser, APIGateway, APIInfo, Snowflake } from '../types';
+
+/**
+ * The main client class for interacting with the RecoilApp Bot API.
+ *
+ * Extends `EventEmitter` to provide lifecycle and debug events.
+ *
+ * @example
+ * ```ts
+ * import { RecoilClient, Intents } from 'recoil.js';
+ *
+ * const client = new RecoilClient({
+ *   intents: Intents.Flags.Servers | Intents.Flags.ServerMessages | Intents.Flags.MessageContent,
+ * });
+ *
+ * client.on('ready', () => {
+ *   console.log(`Logged in as ${client.user!.username}!`);
+ *   console.log(`Serving ${client.servers.size} servers`);
+ * });
+ *
+ * client.login('your-bot-token-here');
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Using intents presets
+ * const client = new RecoilClient({
+ *   intents: Intents.resolve(Intents.Presets.NonPrivileged),
+ * });
+ * ```
+ */
+export class RecoilClient extends EventEmitter {
+
+  // ── Typed Event Overrides ───────────────────────────────
+  // These provide full TypeScript intellisense for client.on(), .once(), .emit(), etc.
+
+  /** Register an event listener with full type safety. */
+  public override on<K extends keyof ClientEvents>(event: K, listener: (...args: ClientEvents[K]) => void): this;
+  public override on(event: string | symbol, listener: (...args: unknown[]) => void): this;
+  public override on(event: string | symbol, listener: (...args: unknown[]) => void): this {
+    return super.on(event, listener as (...args: unknown[]) => void);
+  }
+
+  /** Register a one-time event listener with full type safety. */
+  public override once<K extends keyof ClientEvents>(event: K, listener: (...args: ClientEvents[K]) => void): this;
+  public override once(event: string | symbol, listener: (...args: unknown[]) => void): this;
+  public override once(event: string | symbol, listener: (...args: unknown[]) => void): this {
+    return super.once(event, listener as (...args: unknown[]) => void);
+  }
+
+  /** Emit a typed event. */
+  public override emit<K extends keyof ClientEvents>(event: K, ...args: ClientEvents[K]): boolean;
+  public override emit(event: string | symbol, ...args: unknown[]): boolean;
+  public override emit(event: string | symbol, ...args: unknown[]): boolean {
+    return super.emit(event, ...args);
+  }
+
+  /** Remove an event listener with full type safety. */
+  public override off<K extends keyof ClientEvents>(event: K, listener: (...args: ClientEvents[K]) => void): this;
+  public override off(event: string | symbol, listener: (...args: unknown[]) => void): this;
+  public override off(event: string | symbol, listener: (...args: unknown[]) => void): this {
+    return super.off(event, listener as (...args: unknown[]) => void);
+  }
+
+  /** Remove an event listener (alias for {@link off}). */
+  public override removeListener<K extends keyof ClientEvents>(event: K, listener: (...args: ClientEvents[K]) => void): this;
+  public override removeListener(event: string | symbol, listener: (...args: unknown[]) => void): this;
+  public override removeListener(event: string | symbol, listener: (...args: unknown[]) => void): this {
+    return super.removeListener(event, listener as (...args: unknown[]) => void);
+  }
+
+  // ── Properties ──────────────────────────────────────────
+
+  /** The REST manager for making API requests */
+  public readonly rest: RESTManager;
+
+  /** The server manager — access and cache bot's servers */
+  public readonly servers: ServerManager;
+
+  /** The bot gateway — WebSocket connection for real-time events */
+  public readonly gateway: Gateway;
+
+  /** The resolved intents bitfield */
+  public readonly intents: IntentsBitField;
+
+  /** The client options (merged with defaults) */
+  public readonly options: ClientOptions;
+
+  /** The authenticated bot user (populated after {@link login}) */
+  public user: ClientUser | null = null;
+
+  /** The bot's token (set during {@link login}) */
+  private _token: string | null = null;
+
+  /** Timestamp of when the client became ready */
+  private _readyAt: Date | null = null;
+
+  /** Whether the client has been destroyed */
+  private _destroyed = false;
+
+  /**
+   * Creates a new RecoilClient.
+   *
+   * @param options - Client configuration
+   */
+  constructor(options: ClientOptions) {
+    super();
+
+    this.options = {
+      ...DefaultClientOptions,
+      ...options,
+    };
+
+    // Resolve intents
+    if (options.intents instanceof IntentsBitField) {
+      this.intents = options.intents;
+    } else {
+      this.intents = new IntentsBitField(BigInt(options.intents));
+    }
+
+    // Initialize REST manager
+    this.rest = new RESTManager({
+      apiBase: options.apiBaseUrl,
+      ...options.rest,
+    });
+
+    // Forward REST events to the client so client.on('rateLimit', ...) etc. works
+    this.rest.on('apiRequest', (data: unknown) => this.emit(Events.ApiRequest, data));
+    this.rest.on('apiResponse', (data: unknown) => this.emit(Events.ApiResponse, data));
+    this.rest.on('rateLimit', (data: unknown) => this.emit(Events.RateLimit, data));
+    this.rest.on('debug', (info: string) => this.emit(Events.Debug, `[REST] ${info}`));
+
+    // Initialize managers
+    this.servers = new ServerManager(this);
+
+    // Initialize gateway
+    this.gateway = new Gateway(this, options.gateway);
+  }
+
+  /**
+   * Logs the bot in, authenticating with the provided token.
+   *
+   * This method:
+   * 1. Sets the bot token on the REST manager
+   * 2. Fetches the authenticated bot user (`GET /@me`)
+   * 3. Optionally fetches all servers the bot belongs to
+   * 4. Emits the `ready` event
+   *
+   * @param token - The bot token
+   * @returns The bot token (for chaining)
+   *
+   * @example
+   * ```ts
+   * await client.login(process.env.BOT_TOKEN!);
+   * ```
+   */
+  async login(token: string): Promise<string> {
+    if (this._destroyed) {
+      throw new Error('Cannot login on a destroyed client. Create a new RecoilClient.');
+    }
+
+    this._token = token;
+    this.rest.setToken(token);
+
+    this.emit(Events.Debug, 'Authenticating with bot token...');
+
+    try {
+      // Fetch bot user
+      const userData = await this.rest.get<{ user: APIBotUser }>('/@me');
+      this.user = new ClientUser(this, userData.user);
+
+      this.emit(Events.Debug, `Authenticated as ${this.user.username} (${this.user.id})`);
+
+      // Optionally fetch servers
+      if (this.options.fetchServersOnReady !== false) {
+        this.emit(Events.Debug, 'Fetching servers...');
+        await this.servers.list();
+        this.emit(Events.Debug, `Loaded ${this.servers.size} servers`);
+      }
+
+      this._readyAt = new Date();
+      this.emit(Events.Ready, this);
+
+      // Connect to the bot gateway for real-time events
+      this.gateway.connect(token);
+
+      return token;
+    } catch (error) {
+      this.emit(Events.Error, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetches gateway connection information.
+   *
+   * @returns Gateway info (URL, shards, session limits)
+   */
+  async fetchGateway(): Promise<APIGateway> {
+    return this.rest.get<APIGateway>('/gateway');
+  }
+
+  /**
+   * Fetches API information (version, rate limits, etc.).
+   *
+   * @returns API info
+   */
+  async fetchApiInfo(): Promise<APIInfo> {
+    return this.rest.get<APIInfo>('/info');
+  }
+
+  /**
+   * Destroys the client, cleaning up resources and invalidating the token.
+   */
+  destroy(): void {
+    this._destroyed = true;
+    this._token = null;
+    this.rest.setToken('');
+    this.user = null;
+    this.servers.cache.clear();
+    this._readyAt = null;
+    this.gateway.disconnect();
+
+    this.emit(Events.Destroy);
+    this.removeAllListeners();
+  }
+
+  /**
+   * Whether the client is ready (has authenticated and loaded).
+   */
+  get isReady(): boolean {
+    return this._readyAt !== null && !this._destroyed;
+  }
+
+  /**
+   * The timestamp when the client became ready, or `null`.
+   */
+  get readyAt(): Date | null {
+    return this._readyAt;
+  }
+
+  /**
+   * How long the client has been running (in milliseconds), or `null`.
+   */
+  get uptime(): number | null {
+    if (!this._readyAt) return null;
+    return Date.now() - this._readyAt.getTime();
+  }
+
+  /**
+   * The bot's token. Returns a masked version for safety.
+   */
+  get token(): string | null {
+    return this._token;
+  }
+
+  /**
+   * Returns a human-readable summary of the client state.
+   */
+  toString(): string {
+    if (!this.user) return 'RecoilClient (not logged in)';
+    return `RecoilClient<${this.user.username}> (${this.servers.size} servers)`;
+  }
+
+  /**
+   * JSON representation of the client state.
+   */
+  toJSON(): Record<string, unknown> {
+    return {
+      ready: this.isReady,
+      user: this.user?.toJSON() ?? null,
+      servers: this.servers.size,
+      uptime: this.uptime,
+    };
+  }
+}

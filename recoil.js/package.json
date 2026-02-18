@@ -1,0 +1,44 @@
+{
+  "name": "@recoilapp/recoil.js",
+  "version": "1.0.4",
+  "description": "The official Node.js API wrapper for the RecoilApp Bot API — build powerful bots with ease.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "recoil",
+    "recoilapp",
+    "bot",
+    "api",
+    "wrapper",
+    "chat",
+    "messaging",
+    "sdk"
+  ],
+  "author": "RecoilApp",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/recoilapp/recoil.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "socket.io-client": "^4.8.3",
+    "undici": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0"
+  }
+}
