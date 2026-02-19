@@ -267,6 +267,113 @@ export class RecoilClient extends EventEmitter {
     return data.message;
   }
 
+  // ── MFA Methods ─────────────────────────────────────────
+
+  /**
+   * Verify an MFA code during login.
+   * Uses the ticket JWT from the login response — does not require Bearer auth.
+   *
+   * @param ticket - The ticket JWT returned from login when MFA is required
+   * @param code - The 6-digit TOTP code from the authenticator app
+   * @returns Auth tokens and user object
+   *
+   * @example
+   * ```ts
+   * const result = await client.verifyMfaLogin(ticket, '123456');
+   * console.log(result.accessToken);
+   * ```
+   */
+  async verifyMfaLogin(ticket: string, code: string): Promise<{ user: unknown; accessToken: string; refreshToken: string; sessionId: string }> {
+    return this.rest.post('/auth/mfa/verify', {
+      body: { ticket, code },
+    });
+  }
+
+  /**
+   * Start two-factor authentication setup.
+   * Generates a TOTP secret and provisioning URL for an authenticator app.
+   *
+   * @returns The TOTP secret, OTP URL, and setup message
+   *
+   * @example
+   * ```ts
+   * const setup = await client.setupMfa();
+   * console.log(setup.otp_url); // Use to generate QR code
+   * ```
+   */
+  async setupMfa(): Promise<{ secret: string; otp_url: string; message: string }> {
+    return this.rest.post('/users/@me/mfa/setup');
+  }
+
+  /**
+   * Activate two-factor authentication by verifying a TOTP code.
+   * Must be called after {@link setupMfa}.
+   *
+   * @param code - The 6-digit TOTP code from the authenticator app
+   * @returns Confirmation message, one-time backup codes, and a warning
+   *
+   * @example
+   * ```ts
+   * const result = await client.verifyMfa('123456');
+   * console.log(result.backup_codes); // Store securely!
+   * ```
+   */
+  async verifyMfa(code: string): Promise<{ message: string; backup_codes: string[]; warning: string }> {
+    return this.rest.post('/users/@me/mfa/verify', {
+      body: { code },
+    });
+  }
+
+  /**
+   * Disable two-factor authentication.
+   *
+   * @param password - The user's current password for confirmation
+   * @returns Confirmation message
+   *
+   * @example
+   * ```ts
+   * await client.disableMfa('mySecurePassword');
+   * ```
+   */
+  async disableMfa(password: string): Promise<{ message: string }> {
+    return this.rest.delete('/users/@me/mfa', {
+      body: { password },
+    });
+  }
+
+  /**
+   * Get the remaining and total count of MFA backup codes.
+   *
+   * @returns Remaining and total backup code counts
+   *
+   * @example
+   * ```ts
+   * const info = await client.getBackupCodesInfo();
+   * console.log(`${info.remaining_codes} of ${info.total_codes} remaining`);
+   * ```
+   */
+  async getBackupCodesInfo(): Promise<{ remaining_codes: number; total_codes: number }> {
+    return this.rest.get('/users/@me/mfa/backup-codes');
+  }
+
+  /**
+   * Regenerate all MFA backup codes, invalidating previous ones.
+   *
+   * @param password - The user's current password for confirmation
+   * @returns New backup codes and a warning
+   *
+   * @example
+   * ```ts
+   * const result = await client.regenerateBackupCodes('mySecurePassword');
+   * console.log(result.backup_codes); // Store securely!
+   * ```
+   */
+  async regenerateBackupCodes(password: string): Promise<{ backup_codes: string[]; warning: string }> {
+    return this.rest.post('/users/@me/mfa/regenerate-backup-codes', {
+      body: { password },
+    });
+  }
+
   /**
    * Destroys the client, cleaning up resources and invalidating the token.
    */

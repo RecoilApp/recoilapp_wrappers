@@ -134,6 +134,26 @@ export const Routes = {
   /** `GET/POST /dms/:id/messages` — DM conversation messages */
   dmMessages: (conversationId: Snowflake) => `/dms/${conversationId}/messages` as const,
 
+  // ── MFA ─────────────────────────────────────────────────
+
+  /** `POST /auth/mfa/verify` — Verify MFA code during login (uses ticket JWT, no Bearer auth) */
+  authMfaVerify: () => '/auth/mfa/verify' as const,
+
+  /** `POST /users/@me/mfa/setup` — Start 2FA setup (generate TOTP secret) */
+  mfaSetup: () => '/users/@me/mfa/setup' as const,
+
+  /** `POST /users/@me/mfa/verify` — Activate 2FA by verifying a TOTP code */
+  mfaVerify: () => '/users/@me/mfa/verify' as const,
+
+  /** `DELETE /users/@me/mfa` — Disable 2FA */
+  mfa: () => '/users/@me/mfa' as const,
+
+  /** `GET /users/@me/mfa/backup-codes` — Get backup codes remaining count */
+  mfaBackupCodes: () => '/users/@me/mfa/backup-codes' as const,
+
+  /** `POST /users/@me/mfa/regenerate-backup-codes` — Regenerate backup codes */
+  mfaRegenerateBackupCodes: () => '/users/@me/mfa/regenerate-backup-codes' as const,
+
   // ── Gateway / Info ──────────────────────────────────────
 
   /** `GET /gateway` — Gateway connection info */
