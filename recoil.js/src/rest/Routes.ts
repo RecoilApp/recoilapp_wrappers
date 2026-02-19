@@ -154,6 +154,17 @@ export const Routes = {
   /** `POST /users/@me/mfa/regenerate-backup-codes` — Regenerate backup codes */
   mfaRegenerateBackupCodes: () => '/users/@me/mfa/regenerate-backup-codes' as const,
 
+  // ── QR Login ────────────────────────────────────────────
+
+  /** `POST /auth/qr/generate` — Generate a QR login session */
+  authQrGenerate: () => '/auth/qr/generate' as const,
+
+  /** `GET /auth/qr/status/:token` — Check QR login session status */
+  authQrStatus: (token: string) => `/auth/qr/status/${token}` as const,
+
+  /** `POST /auth/qr/confirm` — Confirm a QR login session (requires auth) */
+  authQrConfirm: () => '/auth/qr/confirm' as const,
+
   // ── Gateway / Info ──────────────────────────────────────
 
   /** `GET /gateway` — Gateway connection info */

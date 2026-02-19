@@ -267,6 +267,69 @@ export class RecoilClient extends EventEmitter {
     return data.message;
   }
 
+  // ── QR Login Methods ────────────────────────────────────
+
+  /**
+   * Generate a new QR login session.
+   * No authentication required. The returned token should be encoded into a QR code
+   * for the mobile app to scan.
+   *
+   * @returns The QR session token, expiry time, and TTL in seconds
+   *
+   * @example
+   * ```ts
+   * const session = await client.generateQrSession();
+   * console.log(session.token); // Encode this into a QR code
+   * console.log(`Expires in ${session.ttl} seconds`);
+   * ```
+   */
+  async generateQrSession(): Promise<{ token: string; expires_at: string; ttl: number }> {
+    return this.rest.post('/auth/qr/generate');
+  }
+
+  /**
+   * Check the status of a QR login session.
+   * No authentication required. Poll this endpoint to detect when the mobile
+   * device has scanned and confirmed the QR code.
+   *
+   * @param token - The QR session token from {@link generateQrSession}
+   * @returns The session status — `'pending'`, `'confirmed'` (with auth tokens), or `'expired'`
+   *
+   * @example
+   * ```ts
+   * const status = await client.checkQrStatus(token);
+   * if (status.status === 'confirmed') {
+   *   console.log(status.accessToken);
+   * }
+   * ```
+   */
+  async checkQrStatus(token: string): Promise<
+    | { status: 'pending' }
+    | { status: 'confirmed'; accessToken: string; refreshToken: string; sessionId: string; user: unknown }
+    | { status: 'expired' }
+  > {
+    return this.rest.get(`/auth/qr/status/${token}`);
+  }
+
+  /**
+   * Confirm a QR login session from the authenticated device.
+   * Requires authentication (Bearer token). Called by the mobile app after
+   * scanning the QR code to authorize the desktop session.
+   *
+   * @param token - The QR session token scanned from the QR code
+   * @returns Confirmation of successful QR login
+   *
+   * @example
+   * ```ts
+   * await client.confirmQrLogin(scannedToken);
+   * ```
+   */
+  async confirmQrLogin(token: string): Promise<{ success: true; message: string }> {
+    return this.rest.post('/auth/qr/confirm', {
+      body: { token },
+    });
+  }
+
   // ── MFA Methods ─────────────────────────────────────────
 
   /**
