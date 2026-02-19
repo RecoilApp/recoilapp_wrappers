@@ -7,24 +7,29 @@
  *
  * ## Event Categories
  *
- * ### Lifecycle Events (active — emitted by the client)
- * These events fire during normal client operation:
+ * ### Lifecycle Events
  * - `ready` — Client authenticated and loaded
  * - `error` — An error occurred
  * - `debug` — Debug information
  * - `rateLimit` — A rate limit was hit
  * - `destroy` — Client was destroyed
  *
- * ### REST Events (active — emitted by RESTManager)
+ * ### REST Events
  * - `apiRequest` — An API request was made
  * - `apiResponse` — An API response was received
  *
- * ### Domain Events (reserved — require gateway/WebSocket)
- * These events are defined for forward compatibility with a future
- * WebSocket gateway connection. They do NOT fire from REST operations.
- * - `messageCreate`, `messageUpdate`, `messageDelete`, etc.
- * - `memberJoin`, `memberLeave`, `memberUpdate`, etc.
- * - `channelCreate`, `channelUpdate`, `channelDelete`, etc.
+ * ### Domain Events (via Gateway v2)
+ * These events are received via the opcode-based Gateway connection:
+ * - `messageCreate`, `messageUpdate`, `messageDelete`, `messageBulkDelete`
+ * - `memberJoin`, `memberLeave`, `memberUpdate`
+ * - `channelCreate`, `channelUpdate`, `channelDelete`
+ * - `roleCreate`, `roleUpdate`, `roleDelete`
+ * - `reactionAdd`, `reactionRemove`
+ * - `banAdd`, `banRemove`
+ * - `inviteCreate`, `inviteDelete`
+ * - `threadCreate`, `threadUpdate`, `threadDelete`
+ * - `presenceUpdate`
+ * - `interactionCreate`
  *
  * @packageDocumentation
  */
@@ -107,7 +112,7 @@ export interface ApiResponseData {
  * ```
  */
 export interface ClientEvents {
-  // ── Lifecycle (ACTIVE) ────────────────────────────────
+  // ── Lifecycle ─────────────────────────────────────────
   /** Emitted when the client is fully authenticated and ready */
   ready: [client: RecoilClient];
   /** Emitted when an error occurs */
@@ -117,7 +122,7 @@ export interface ClientEvents {
   /** Emitted when the client is destroyed */
   destroy: [];
 
-  // ── REST (ACTIVE) ─────────────────────────────────────
+  // ── REST ──────────────────────────────────────────────
   /** Emitted when an API request is made */
   apiRequest: [data: ApiRequestData];
   /** Emitted when an API response is received */
@@ -125,13 +130,13 @@ export interface ClientEvents {
   /** Emitted when a rate limit is encountered */
   rateLimit: [data: RateLimitData];
 
-  // ── Server (GATEWAY — reserved for future use) ────────
+  // ── Server ────────────────────────────────────────────
   /** Emitted when a server's data is updated */
   serverUpdate: [server: Server];
   /** Emitted when the bot is removed from a server */
   serverDelete: [serverId: Snowflake];
 
-  // ── Channel (GATEWAY — reserved for future use) ───────
+  // ── Channel ───────────────────────────────────────────
   /** Emitted when a channel is created */
   channelCreate: [channel: Channel];
   /** Emitted when a channel is updated */
@@ -139,7 +144,7 @@ export interface ClientEvents {
   /** Emitted when a channel is deleted */
   channelDelete: [channelId: Snowflake, serverId: Snowflake];
 
-  // ── Message (GATEWAY — reserved for future use) ───────
+  // ── Message ───────────────────────────────────────────
   /** Emitted when a new message is created */
   messageCreate: [message: Message];
   /** Emitted when a message is edited */
@@ -149,7 +154,7 @@ export interface ClientEvents {
   /** Emitted when messages are bulk deleted */
   messageBulkDelete: [messageIds: Snowflake[], channelId: Snowflake];
 
-  // ── Member (GATEWAY — reserved for future use) ────────
+  // ── Member ────────────────────────────────────────────
   /** Emitted when a member joins a server */
   memberJoin: [member: Member];
   /** Emitted when a member leaves a server */
@@ -157,7 +162,7 @@ export interface ClientEvents {
   /** Emitted when a member is updated */
   memberUpdate: [member: Member];
 
-  // ── Role (GATEWAY — reserved for future use) ──────────
+  // ── Role ──────────────────────────────────────────────
   /** Emitted when a role is created */
   roleCreate: [role: Role];
   /** Emitted when a role is updated */
@@ -165,25 +170,25 @@ export interface ClientEvents {
   /** Emitted when a role is deleted */
   roleDelete: [roleId: Snowflake, serverId: Snowflake];
 
-  // ── Reaction (GATEWAY — reserved for future use) ──────
+  // ── Reaction ──────────────────────────────────────────
   /** Emitted when a reaction is added */
   reactionAdd: [reaction: Reaction, messageId: Snowflake, channelId: Snowflake];
   /** Emitted when a reaction is removed */
   reactionRemove: [emoji: string, userId: Snowflake, messageId: Snowflake, channelId: Snowflake];
 
-  // ── Ban (GATEWAY — reserved for future use) ───────────
+  // ── Ban ───────────────────────────────────────────────
   /** Emitted when a user is banned */
   banAdd: [ban: Ban];
   /** Emitted when a user is unbanned */
   banRemove: [userId: Snowflake, serverId: Snowflake];
 
-  // ── Invite (GATEWAY — reserved for future use) ────────
+  // ── Invite ────────────────────────────────────────────
   /** Emitted when an invite is created */
   inviteCreate: [invite: Invite];
   /** Emitted when an invite is deleted */
   inviteDelete: [inviteId: Snowflake, serverId: Snowflake];
 
-  // ── Thread (GATEWAY — reserved for future use) ────────
+  // ── Thread ────────────────────────────────────────────
   /** Emitted when a thread is created */
   threadCreate: [thread: Thread];
   /** Emitted when a thread is updated */
@@ -191,11 +196,11 @@ export interface ClientEvents {
   /** Emitted when a thread is deleted */
   threadDelete: [threadId: Snowflake, channelId: Snowflake];
 
-  // ── Presence (GATEWAY — reserved for future use) ──────
+  // ── Presence ──────────────────────────────────────────
   /** Emitted when a user's presence changes */
   presenceUpdate: [userId: Snowflake, status: string, serverId: Snowflake];
 
-  // ── Interaction (ACTIVE via Bot Gateway) ───────────────
+  // ── Interaction ───────────────────────────────────────
   /** Emitted when a user clicks a button on a bot embed */
   interactionCreate: [interaction: ButtonInteraction];
 }

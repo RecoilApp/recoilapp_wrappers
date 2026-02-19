@@ -129,16 +129,15 @@ export class MemberManager extends BaseManager<Member> {
   }
 
   /**
-   * Adds a member to the cache.
+   * Adds a member to the cache, patching existing entries.
    * @internal
    */
   _add(data: APIMember): Member {
     const existing = this.cache.get(data.user_id);
     if (existing) {
-      // For simplicity, replace with new data
-      const member = new Member(this.client, this.serverId, data);
-      this.cache.set(data.user_id, member);
-      return member;
+      // Patch existing member instead of creating a new instance
+      existing._patch(data);
+      return existing;
     }
     const member = new Member(this.client, this.serverId, data);
     this.cache.set(data.user_id, member);

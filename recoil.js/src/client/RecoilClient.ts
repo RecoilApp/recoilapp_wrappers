@@ -15,7 +15,7 @@ import { ClientUser } from '../structures/User';
 import { IntentsBitField, Intents } from '../util/Intents';
 import { Events } from '../util/Events';
 import { Gateway } from '../gateway/Gateway';
-import type { APIBotUser, APIGateway, APIInfo, Snowflake } from '../types';
+import type { APIBotUser, APIGateway, APIInfo, APIMessage, APIMessageCreate, Snowflake } from '../types';
 
 /**
  * The main client class for interacting with the RecoilApp Bot API.
@@ -227,6 +227,47 @@ export class RecoilClient extends EventEmitter {
   }
 
   /**
+   * Sends a direct message to a DM conversation.
+   *
+   * @param conversationId - The DM conversation ID
+   * @param options - Message content and options
+   * @returns The raw API message data
+   *
+   * @example
+   * ```ts
+   * await client.sendDM(conversationId, { content: 'Hello via DM!' });
+   *
+   * // With attachments
+   * await client.sendDM(conversationId, {
+   *   content: 'Check these out!',
+   *   attachments: [file1, file2],
+   * });
+   * ```
+   */
+  async sendDM(conversationId: Snowflake, options: APIMessageCreate): Promise<APIMessage> {
+    if (options.attachments?.length) {
+      const formData = new FormData();
+      if (options.content) formData.append('content', options.content);
+      if (options.reply_to_id) formData.append('reply_to_id', options.reply_to_id);
+      if (options.embeds) formData.append('embeds', JSON.stringify(options.embeds));
+      for (const file of options.attachments) {
+        formData.append('attachments', file);
+      }
+      const data = await this.rest.post<{ message: APIMessage }>(
+        `/dms/${conversationId}/messages`,
+        { formData },
+      );
+      return data.message;
+    }
+
+    const data = await this.rest.post<{ message: APIMessage }>(
+      `/dms/${conversationId}/messages`,
+      { body: options as unknown as Record<string, unknown> },
+    );
+    return data.message;
+  }
+
+  /**
    * Destroys the client, cleaning up resources and invalidating the token.
    */
   destroy(): void {
@@ -240,6 +281,36 @@ export class RecoilClient extends EventEmitter {
 
     this.emit(Events.Destroy);
     this.removeAllListeners();
+  }
+
+  /**
+   * Sweep (evict) cached messages across all channels to free memory.
+   * Uses the per-channel message cache size from `messageCacheMaxSize`.
+   *
+   * @param maxPerChannel - Override the maximum messages to keep per channel
+   * @returns The total number of messages evicted
+   *
+   * @example
+   * ```ts
+   * // Sweep using the default max from options
+   * const evicted = client.sweepMessages();
+   * console.log(`Evicted ${evicted} cached messages`);
+   *
+   * // Sweep down to 10 messages per channel
+   * client.sweepMessages(10);
+   * ```
+   */
+  sweepMessages(maxPerChannel?: number): number {
+    let total = 0;
+    for (const server of this.servers.cache.values()) {
+      if (!server.channels) continue;
+      for (const channel of server.channels.cache.values()) {
+        if (channel.messages) {
+          total += channel.messages.sweep(maxPerChannel);
+        }
+      }
+    }
+    return total;
   }
 
   /**

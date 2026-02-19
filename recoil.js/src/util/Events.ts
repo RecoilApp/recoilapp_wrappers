@@ -4,12 +4,12 @@
  *
  * ## Event Status
  *
- * **Active events** fire during normal REST-based client operation:
- * - `ready`, `error`, `debug`, `apiRequest`, `apiResponse`, `rateLimit`, `destroy`
- *
- * **Reserved events** are defined for forward compatibility with a future
- * WebSocket/gateway connection. They do NOT fire from REST operations:
- * - All domain events (servers, channels, messages, members, roles, etc.)
+ * **Active events** fire during normal client operation via REST or the
+ * Gateway v2 opcode-based protocol:
+ * - Lifecycle: `ready`, `error`, `debug`, `destroy`
+ * - REST: `apiRequest`, `apiResponse`, `rateLimit`
+ * - Domain (via Gateway): all message, member, channel, role, reaction,
+ *   ban, invite, thread, presence, and interaction events
  *
  * @packageDocumentation
  */
@@ -21,111 +21,110 @@
  * ```ts
  * import { Events } from 'recoil.js';
  *
- * // Active — fires on login
  * client.on(Events.Ready, (client) => {
  *   console.log(`Bot is online as ${client.user!.username}!`);
  * });
  *
- * // Active — fires on every debug message
- * client.on(Events.Debug, (info) => {
- *   console.log(`[DEBUG] ${info}`);
+ * client.on(Events.MessageCreate, (message) => {
+ *   if (message.content === '!ping') {
+ *     message.reply('Pong!');
+ *   }
  * });
  *
- * // Active — fires on errors
- * client.on(Events.Error, (error) => {
- *   console.error(`[ERROR] ${error.message}`);
+ * client.on(Events.MemberJoin, (member) => {
+ *   console.log(`${member.username} joined!`);
  * });
  * ```
  */
 export const Events = {
-  // ── Lifecycle (ACTIVE) ─────────────────────────────────
-  /** ✅ ACTIVE — Emitted when the client is fully initialized and ready */
+  // ── Lifecycle ──────────────────────────────────────────
+  /** Emitted when the client is fully initialized and ready */
   Ready: 'ready',
-  /** ✅ ACTIVE — Emitted when an error occurs */
+  /** Emitted when an error occurs */
   Error: 'error',
-  /** ✅ ACTIVE — Emitted for debug logging */
+  /** Emitted for debug logging */
   Debug: 'debug',
-  /** ✅ ACTIVE — Emitted on every API request (for monitoring) */
+  /** Emitted on every API request (for monitoring) */
   ApiRequest: 'apiRequest',
-  /** ✅ ACTIVE — Emitted on every API response */
+  /** Emitted on every API response */
   ApiResponse: 'apiResponse',
-  /** ✅ ACTIVE — Emitted when a rate limit is hit */
+  /** Emitted when a rate limit is hit */
   RateLimit: 'rateLimit',
-  /** ✅ ACTIVE — Emitted when the client is destroyed/disconnected */
+  /** Emitted when the client is destroyed/disconnected */
   Destroy: 'destroy',
 
-  // ── Server (GATEWAY — reserved) ────────────────────────
-  /** 🔮 RESERVED — Emitted when a server's data is updated */
+  // ── Server (via Gateway) ───────────────────────────────
+  /** Emitted when a server's data is updated */
   ServerUpdate: 'serverUpdate',
-  /** 🔮 RESERVED — Emitted when the bot leaves or is removed from a server */
+  /** Emitted when the bot leaves or is removed from a server */
   ServerDelete: 'serverDelete',
 
-  // ── Channel (GATEWAY — reserved) ───────────────────────
-  /** 🔮 RESERVED — Emitted when a channel is created */
+  // ── Channel (via Gateway) ──────────────────────────────
+  /** Emitted when a channel is created */
   ChannelCreate: 'channelCreate',
-  /** 🔮 RESERVED — Emitted when a channel is updated */
+  /** Emitted when a channel is updated */
   ChannelUpdate: 'channelUpdate',
-  /** 🔮 RESERVED — Emitted when a channel is deleted */
+  /** Emitted when a channel is deleted */
   ChannelDelete: 'channelDelete',
 
-  // ── Message (GATEWAY — reserved) ───────────────────────
-  /** 🔮 RESERVED — Emitted when a new message is created */
+  // ── Message (via Gateway) ──────────────────────────────
+  /** Emitted when a new message is created */
   MessageCreate: 'messageCreate',
-  /** 🔮 RESERVED — Emitted when a message is edited */
+  /** Emitted when a message is edited */
   MessageUpdate: 'messageUpdate',
-  /** 🔮 RESERVED — Emitted when a message is deleted */
+  /** Emitted when a message is deleted */
   MessageDelete: 'messageDelete',
-  /** 🔮 RESERVED — Emitted when messages are bulk deleted */
+  /** Emitted when messages are bulk deleted */
   MessageBulkDelete: 'messageBulkDelete',
 
-  // ── Member (GATEWAY — reserved) ────────────────────────
-  /** 🔮 RESERVED — Emitted when a new member joins a server */
+  // ── Member (via Gateway) ───────────────────────────────
+  /** Emitted when a new member joins a server */
   MemberJoin: 'memberJoin',
-  /** 🔮 RESERVED — Emitted when a member leaves or is removed from a server */
+  /** Emitted when a member leaves or is removed from a server */
   MemberLeave: 'memberLeave',
-  /** 🔮 RESERVED — Emitted when a member is updated (nickname, roles) */
+  /** Emitted when a member is updated (nickname, roles) */
   MemberUpdate: 'memberUpdate',
 
-  // ── Role (GATEWAY — reserved) ──────────────────────────
-  /** 🔮 RESERVED — Emitted when a role is created */
+  // ── Role (via Gateway) ─────────────────────────────────
+  /** Emitted when a role is created */
   RoleCreate: 'roleCreate',
-  /** 🔮 RESERVED — Emitted when a role is updated */
+  /** Emitted when a role is updated */
   RoleUpdate: 'roleUpdate',
-  /** 🔮 RESERVED — Emitted when a role is deleted */
+  /** Emitted when a role is deleted */
   RoleDelete: 'roleDelete',
 
-  // ── Reaction (GATEWAY — reserved) ──────────────────────
-  /** 🔮 RESERVED — Emitted when a reaction is added to a message */
+  // ── Reaction (via Gateway) ─────────────────────────────
+  /** Emitted when a reaction is added to a message */
   ReactionAdd: 'reactionAdd',
-  /** 🔮 RESERVED — Emitted when a reaction is removed from a message */
+  /** Emitted when a reaction is removed from a message */
   ReactionRemove: 'reactionRemove',
 
-  // ── Ban (GATEWAY — reserved) ───────────────────────────
-  /** 🔮 RESERVED — Emitted when a user is banned */
+  // ── Ban (via Gateway) ──────────────────────────────────
+  /** Emitted when a user is banned */
   BanAdd: 'banAdd',
-  /** 🔮 RESERVED — Emitted when a user is unbanned */
+  /** Emitted when a user is unbanned */
   BanRemove: 'banRemove',
 
-  // ── Invite (GATEWAY — reserved) ────────────────────────
-  /** 🔮 RESERVED — Emitted when an invite is created */
+  // ── Invite (via Gateway) ───────────────────────────────
+  /** Emitted when an invite is created */
   InviteCreate: 'inviteCreate',
-  /** 🔮 RESERVED — Emitted when an invite is deleted/revoked */
+  /** Emitted when an invite is deleted/revoked */
   InviteDelete: 'inviteDelete',
 
-  // ── Thread (GATEWAY — reserved) ────────────────────────
-  /** 🔮 RESERVED — Emitted when a thread is created */
+  // ── Thread (via Gateway) ───────────────────────────────
+  /** Emitted when a thread is created */
   ThreadCreate: 'threadCreate',
-  /** 🔮 RESERVED — Emitted when a thread is updated */
+  /** Emitted when a thread is updated */
   ThreadUpdate: 'threadUpdate',
-  /** 🔮 RESERVED — Emitted when a thread is deleted */
+  /** Emitted when a thread is deleted */
   ThreadDelete: 'threadDelete',
 
-  // ── Presence (GATEWAY — reserved) ──────────────────────
-  /** 🔮 RESERVED — Emitted when a user's presence (status) changes */
+  // ── Presence (via Gateway) ─────────────────────────────
+  /** Emitted when a user's presence (status) changes */
   PresenceUpdate: 'presenceUpdate',
 
-  // ── Interaction (ACTIVE via Bot Gateway) ───────────────
-  /** ✅ ACTIVE — Emitted when a user clicks a button on a bot embed */
+  // ── Interaction (via Gateway) ──────────────────────────
+  /** Emitted when a user clicks a button on a bot embed */
   InteractionCreate: 'interactionCreate',
 } as const;
 

@@ -33,6 +33,8 @@ export interface RESTOptions {
 export interface RequestOptions {
   /** Request body (will be JSON-serialized) */
   body?: Record<string, unknown> | unknown[];
+  /** FormData body for multipart/form-data requests (e.g., file uploads) */
+  formData?: FormData;
   /** Query string parameters */
   query?: Record<string, string | number | boolean | undefined>;
   /** Additional headers for this request */
@@ -212,11 +214,15 @@ export class RESTManager extends EventEmitter {
     const headers: Record<string, string> = {
       'Authorization': `Bot ${this.token}`,
       'User-Agent': USER_AGENT,
-      'Content-Type': 'application/json',
       'Accept': 'application/json',
       ...this.customHeaders,
       ...(options.headers ?? {}),
     };
+
+    // Don't set Content-Type for FormData — the runtime adds the multipart boundary
+    if (!options.formData) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     if (options.reason) {
       headers['X-Audit-Log-Reason'] = encodeURIComponent(options.reason);
@@ -247,7 +253,9 @@ export class RESTManager extends EventEmitter {
           signal: controller.signal,
         };
 
-        if (options.body && !['GET', 'HEAD'].includes(method)) {
+        if (options.formData && !['GET', 'HEAD'].includes(method)) {
+          fetchOptions.body = options.formData;
+        } else if (options.body && !['GET', 'HEAD'].includes(method)) {
           fetchOptions.body = JSON.stringify(options.body);
         }
 

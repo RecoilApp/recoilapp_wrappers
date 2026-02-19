@@ -12,7 +12,7 @@ export const DEFAULT_API_BASE = 'https://recoilapp.com/api/v1';
 export const API_VERSION = 1;
 
 /** Package version (keep in sync with package.json) */
-export const LIB_VERSION = '1.0.0';
+export const LIB_VERSION = '1.1.0';
 
 /** Default user agent string sent with every request */
 export const USER_AGENT = `RecoilBot (https://recoilapp.com, ${LIB_VERSION})`;

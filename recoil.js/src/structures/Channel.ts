@@ -6,7 +6,7 @@
  */
 
 import type { RecoilClient } from '../client/RecoilClient';
-import type { APIChannel, APIChannelEdit, Snowflake } from '../types';
+import type { APIChannel, APIChannelEdit, APIMessageCreate, APIEmbed, Snowflake } from '../types';
 import { ChannelType } from '../types';
 import { Base } from './Base';
 import type { MessageManager } from '../managers/MessageManager';
@@ -132,17 +132,26 @@ export class Channel extends Base {
    * Send a message to this channel.
    * Convenience shortcut for `channel.messages.send(content)`.
    *
-   * @param content - The message content (or options object)
+   * @param content - The message content (string, or full message create options)
    * @returns The created Message
    *
    * @example
    * ```ts
+   * // Simple text
    * await channel.send('Hello, world!');
+   *
+   * // With reply
    * await channel.send({ content: 'Reply!', reply_to_id: someMessageId });
+   *
+   * // With embeds
+   * await channel.send({ embeds: [embed.build()] });
+   *
+   * // Text + embeds
+   * await channel.send({ content: 'Check this out!', embeds: [embed.build()] });
    * ```
    */
-  async send(content: string | { content: string; reply_to_id?: Snowflake }) {
-    const body = typeof content === 'string' ? { content } : content;
+  async send(content: string | APIMessageCreate) {
+    const body: APIMessageCreate = typeof content === 'string' ? { content } : content;
     return this.messages.send(body);
   }
 

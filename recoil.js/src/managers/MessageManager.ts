@@ -107,6 +107,21 @@ export class MessageManager extends BaseManager<Message> {
    * ```
    */
   async send(options: APIMessageCreate): Promise<Message> {
+    if (options.attachments?.length) {
+      const formData = new FormData();
+      if (options.content) formData.append('content', options.content);
+      if (options.reply_to_id) formData.append('reply_to_id', options.reply_to_id);
+      if (options.embeds) formData.append('embeds', JSON.stringify(options.embeds));
+      for (const file of options.attachments) {
+        formData.append('attachments', file);
+      }
+      const data = await this.client.rest.post<{ message: APIMessage }>(
+        `/channels/${this.channelId}/messages`,
+        { formData },
+      );
+      return this._add(data.message);
+    }
+
     const data = await this.client.rest.post<{ message: APIMessage }>(
       `/channels/${this.channelId}/messages`,
       { body: options as unknown as Record<string, unknown> },
@@ -177,7 +192,27 @@ export class MessageManager extends BaseManager<Message> {
   }
 
   /**
+   * Removes messages from the cache that are older than the max cache size.
+   * Evicts the oldest messages first (by insertion order in the Map).
+   *
+   * @param max - Override the max cache size (defaults to client option)
+   * @returns The number of messages evicted
+   */
+  sweep(max?: number): number {
+    const limit = max ?? this.client.options.messageCacheMaxSize ?? 100;
+    if (limit <= 0 || this.cache.size <= limit) return 0;
+
+    const excess = this.cache.size - limit;
+    const keys = this.cache.firstKey(excess);
+    for (const key of keys) {
+      this.cache.delete(key);
+    }
+    return excess;
+  }
+
+  /**
    * Adds a message to the cache and initializes its reaction manager.
+   * Automatically evicts old messages when the cache exceeds the max size.
    * @internal
    */
   _add(data: APIMessage): Message {
@@ -187,6 +222,12 @@ export class MessageManager extends BaseManager<Message> {
     } else {
       message = new Message(this.client, data);
       this.cache.set(data.id, message);
+
+      // Enforce cache size limit
+      const maxSize = this.client.options.messageCacheMaxSize ?? 100;
+      if (maxSize > 0 && this.cache.size > maxSize) {
+        this.sweep(maxSize);
+      }
     }
 
     if (!message.reactions) {

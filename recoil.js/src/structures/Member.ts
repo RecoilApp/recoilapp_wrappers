@@ -86,6 +86,25 @@ export class Member extends Base {
   }
 
   /**
+   * Updates this member's cached data from new API data.
+   * @internal
+   */
+  _patch(data: Partial<APIMember>): this {
+    if (data.nickname !== undefined) this.nickname = data.nickname;
+    if (data.status !== undefined) this.status = data.status;
+    if (data.bio !== undefined) this.bio = data.bio ?? null;
+    if (data.banner_url !== undefined) this.bannerURL = data.banner_url ?? null;
+    if (data.joined_at) this.joinedAt = new Date(data.joined_at);
+    if (Array.isArray(data.roles)) {
+      this.roles.clear();
+      for (const role of data.roles) {
+        this.roles.set(role.id, new MemberRole(role));
+      }
+    }
+    return this;
+  }
+
+  /**
    * The name to display. Prefers nickname, then display_name, then username.
    */
   get displayTag(): string {

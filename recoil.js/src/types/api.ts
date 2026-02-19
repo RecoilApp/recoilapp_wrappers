@@ -187,6 +187,8 @@ export interface APIMessageCreate {
   content?: string;
   reply_to_id?: Snowflake;
   embeds?: APIEmbed[];
+  /** File attachments to upload (up to 10). */
+  attachments?: Blob[];
 }
 
 /**
@@ -482,6 +484,8 @@ export interface APIInviteCreate {
   max_uses?: number;
   max_age_seconds?: number;
   channel_id?: Snowflake;
+  /** Custom invite code (premium servers only). */
+  custom_code?: string;
 }
 
 // ═══════════════════════════════════════════════════════════

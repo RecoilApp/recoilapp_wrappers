@@ -129,6 +129,11 @@ export const Routes = {
   /** `GET /servers/:id/webhooks` — Server webhooks */
   serverWebhooks: (serverId: Snowflake) => `/servers/${serverId}/webhooks` as const,
 
+  // ── Direct Messages ─────────────────────────────────────
+
+  /** `GET/POST /dms/:id/messages` — DM conversation messages */
+  dmMessages: (conversationId: Snowflake) => `/dms/${conversationId}/messages` as const,
+
   // ── Gateway / Info ──────────────────────────────────────
 
   /** `GET /gateway` — Gateway connection info */
@@ -136,5 +141,18 @@ export const Routes = {
 
   /** `GET /api-info` — API information */
   apiInfo: () => '/api-info' as const,
+
+  // ── System Announcements (Admin) ────────────────────────
+
+  /** `GET/POST /admin/announcements` — List all or create system announcements */
+  announcements: () => '/admin/announcements' as const,
+
+  /** `GET/DELETE /admin/announcements/:id` — Get or delete a specific announcement */
+  announcement: (announcementId: Snowflake) =>
+    `/admin/announcements/${announcementId}` as const,
+
+  /** `POST /admin/announcements/:id/send` — Send a scheduled announcement now */
+  announcementSend: (announcementId: Snowflake) =>
+    `/admin/announcements/${announcementId}/send` as const,
 
 } as const;
