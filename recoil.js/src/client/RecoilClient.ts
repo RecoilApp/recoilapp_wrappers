@@ -438,6 +438,26 @@ export class RecoilClient extends EventEmitter {
   }
 
   /**
+   * Change the email address associated with the authenticated user's account.
+   * Requires the current password for confirmation. A verification email will
+   * be sent to the new address.
+   *
+   * @param email - The new email address
+   * @param password - The user's current password for confirmation
+   * @returns Confirmation message
+   *
+   * @example
+   * ```ts
+   * await client.changeEmail('newemail@example.com', 'myPassword');
+   * ```
+   */
+  async changeEmail(email: string, password: string): Promise<{ message: string }> {
+    return this.rest.put('/users/@me/email', {
+      body: { email, password },
+    });
+  }
+
+  /**
    * Destroys the client, cleaning up resources and invalidating the token.
    */
   destroy(): void {

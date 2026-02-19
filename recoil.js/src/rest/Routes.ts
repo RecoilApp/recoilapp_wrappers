@@ -139,6 +139,14 @@ export const Routes = {
   /** `POST /auth/mfa/verify` — Verify MFA code during login (uses ticket JWT, no Bearer auth) */
   authMfaVerify: () => '/auth/mfa/verify' as const,
 
+  // ── Email Login Verification ────────────────────────────
+
+  /** `POST /auth/email-code/verify` — Verify email login code (for users without TOTP 2FA) */
+  authEmailCodeVerify: () => '/auth/email-code/verify' as const,
+
+  /** `POST /auth/email-code/resend` — Resend email login verification code */
+  authEmailCodeResend: () => '/auth/email-code/resend' as const,
+
   /** `POST /users/@me/mfa/setup` — Start 2FA setup (generate TOTP secret) */
   mfaSetup: () => '/users/@me/mfa/setup' as const,
 
@@ -185,5 +193,18 @@ export const Routes = {
   /** `POST /admin/announcements/:id/send` — Send a scheduled announcement now */
   announcementSend: (announcementId: Snowflake) =>
     `/admin/announcements/${announcementId}/send` as const,
+
+  // ── Supporters ──────────────────────────────────────────
+
+  /** `GET /supporters/programs` — List active supporter programs */
+  supporterPrograms: () => '/supporters/programs' as const,
+
+  /** `GET /supporters/programs/:id` — Get a single program with stats */
+  supporterProgram: (programId: Snowflake) =>
+    `/supporters/programs/${programId}` as const,
+
+  /** `GET /supporters/programs/:id/wall` — Get the supporter wall */
+  supporterWall: (programId: Snowflake) =>
+    `/supporters/programs/${programId}/wall` as const,
 
 } as const;
