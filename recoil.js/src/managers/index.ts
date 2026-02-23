@@ -18,3 +18,18 @@ export { InviteManager } from './InviteManager';
 export { ThreadManager } from './ThreadManager';
 export { EmojiManager } from './EmojiManager';
 export { WebhookManager } from './WebhookManager';
+export { DiscoveryManager } from './DiscoveryManager';
+export type {
+  DiscoveryServerData,
+  DiscoverySearchOptions,
+  DiscoveryListResult,
+  DiscoveryCategoriesResult,
+  DiscoveryCategory,
+} from './DiscoveryManager';
+export { SurgeManager } from './SurgeManager';
+export type {
+  SurgeTierPerkInfo,
+  SurgeUser,
+  ServerSurgeInfo,
+  SurgeActionResult,
+} from './SurgeManager';

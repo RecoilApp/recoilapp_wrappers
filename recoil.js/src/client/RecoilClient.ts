@@ -11,6 +11,7 @@ import { DefaultClientOptions } from './ClientOptions';
 import type { ClientEvents } from './ClientEvents';
 import { RESTManager } from '../rest/RESTManager';
 import { ServerManager } from '../managers/ServerManager';
+import { DiscoveryManager } from '../managers/DiscoveryManager';
 import { ClientUser } from '../structures/User';
 import { IntentsBitField, Intents } from '../util/Intents';
 import { Events } from '../util/Events';
@@ -94,6 +95,9 @@ export class RecoilClient extends EventEmitter {
   /** The server manager — access and cache bot's servers */
   public readonly servers: ServerManager;
 
+  /** The discovery manager — browse the public server discovery listing */
+  public readonly discovery: DiscoveryManager;
+
   /** The bot gateway — WebSocket connection for real-time events */
   public readonly gateway: Gateway;
 
@@ -149,6 +153,7 @@ export class RecoilClient extends EventEmitter {
 
     // Initialize managers
     this.servers = new ServerManager(this);
+    this.discovery = new DiscoveryManager(this);
 
     // Initialize gateway
     this.gateway = new Gateway(this, options.gateway);

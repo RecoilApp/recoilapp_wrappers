@@ -207,4 +207,9 @@ export const Routes = {
   supporterWall: (programId: Snowflake) =>
     `/supporters/programs/${programId}/wall` as const,
 
+  // ── Surges ──────────────────────────────────────────────
+
+  /** `GET /servers/:id/surges` — Surge info for a server (count, tier, perks, recent surgers) */
+  serverSurges: (serverId: Snowflake) => `/servers/${serverId}/surges` as const,
+
 } as const;

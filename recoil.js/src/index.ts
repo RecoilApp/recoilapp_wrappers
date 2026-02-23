@@ -83,6 +83,17 @@ export {
   ThreadManager,
   EmojiManager,
   WebhookManager,
+  DiscoveryManager,
+  type DiscoveryServerData,
+  type DiscoverySearchOptions,
+  type DiscoveryListResult,
+  type DiscoveryCategoriesResult,
+  type DiscoveryCategory,
+  SurgeManager,
+  type SurgeTierPerkInfo,
+  type SurgeUser,
+  type ServerSurgeInfo,
+  type SurgeActionResult,
 } from './managers';
 
 // ── REST ────────────────────────────────────────────────────────────────────
