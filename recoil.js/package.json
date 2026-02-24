@@ -1,6 +1,6 @@
 {
   "name": "@recoilapp/recoil.js",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "The official Node.js API wrapper for the RecoilApp Bot API — build powerful bots with ease.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -30,7 +30,7 @@
     "type": "git",
     "url": "https://github.com/RecoilApp/recoilapp_wrappers.git"
   },
-  "homepage": "https://github.com/RecoilApp/recoilapp_wrappers/tree/master/recoil.js#readme",
+  "homepage": "https://recoilapp.com",
   "bugs": {
     "url": "https://github.com/RecoilApp/recoilapp_wrappers/issues"
   },
