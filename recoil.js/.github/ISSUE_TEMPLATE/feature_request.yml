@@ -1,0 +1,56 @@
+name: Feature Request
+description: Suggest a new feature or improvement for recoil.js
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to make recoil.js better? We'd love to hear it!
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Feature Description
+      description: A clear and concise description of the feature you'd like.
+      placeholder: Describe the feature...
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Why do you need this feature? What problem does it solve?
+      placeholder: Explain the use case...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-api
+    attributes:
+      label: Proposed API
+      description: If you have an idea of what the API should look like, share it here.
+      placeholder: |
+        // Example usage
+        const client = new RecoilClient({ ... });
+        client.newFeature.doSomething();
+      render: typescript
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative approaches?
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other context, screenshots, or references.
+    validations:
+      required: false
