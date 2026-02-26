@@ -155,6 +155,25 @@ export class MessageManager extends BaseManager<Message> {
   }
 
   /**
+   * Fetches the edit history of a message.
+   *
+   * @param messageId - The message to fetch history for
+   * @returns Array of previous message versions, newest first
+   *
+   * @example
+   * ```ts
+   * const history = await channel.messages.fetchEditHistory('msg-id');
+   * console.log(`${history.length} previous versions`);
+   * ```
+   */
+  async fetchEditHistory(messageId: Snowflake): Promise<{ id: string; content: string; edited_at: string }[]> {
+    const data = await this.client.rest.get<{ history: { id: string; content: string; edited_at: string }[] }>(
+      `/channels/${this.channelId}/messages/${messageId}/history`,
+    );
+    return data.history;
+  }
+
+  /**
    * Deletes a message.
    *
    * @param messageId - The message to delete
