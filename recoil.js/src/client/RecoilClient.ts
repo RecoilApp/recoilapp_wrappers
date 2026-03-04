@@ -12,6 +12,8 @@ import type { ClientEvents } from './ClientEvents';
 import { RESTManager } from '../rest/RESTManager';
 import { ServerManager } from '../managers/ServerManager';
 import { DiscoveryManager } from '../managers/DiscoveryManager';
+import { OrbsManager } from '../managers/OrbsManager';
+import { ShopManager } from '../managers/ShopManager';
 import { ClientUser } from '../structures/User';
 import { IntentsBitField, Intents } from '../util/Intents';
 import { Events } from '../util/Events';
@@ -98,6 +100,12 @@ export class RecoilClient extends EventEmitter {
   /** The discovery manager — browse the public server discovery listing */
   public readonly discovery: DiscoveryManager;
 
+  /** The orbs manager — manage Orbs currency, daily claims and earning rules */
+  public readonly orbs: OrbsManager;
+
+  /** The shop manager — browse, purchase and equip shop items */
+  public readonly shop: ShopManager;
+
   /** The bot gateway — WebSocket connection for real-time events */
   public readonly gateway: Gateway;
 
@@ -154,6 +162,8 @@ export class RecoilClient extends EventEmitter {
     // Initialize managers
     this.servers = new ServerManager(this);
     this.discovery = new DiscoveryManager(this);
+    this.orbs = new OrbsManager(this);
+    this.shop = new ShopManager(this);
 
     // Initialize gateway
     this.gateway = new Gateway(this, options.gateway);

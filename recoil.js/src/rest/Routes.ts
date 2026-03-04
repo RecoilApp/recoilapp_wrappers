@@ -212,4 +212,35 @@ export const Routes = {
   /** `GET /servers/:id/surges` — Surge info for a server (count, tier, perks, recent surgers) */
   serverSurges: (serverId: Snowflake) => `/servers/${serverId}/surges` as const,
 
+  // ── Orbs ────────────────────────────────────────────────
+
+  /** `GET /orbs/balance` — Get user's Orbs balance */
+  orbsBalance: () => '/orbs/balance' as const,
+
+  /** `GET /orbs/transactions` — Get user's transaction history */
+  orbsTransactions: () => '/orbs/transactions' as const,
+
+  /** `GET /orbs/daily` — Check if daily reward is claimable */
+  orbsDaily: () => '/orbs/daily' as const,
+
+  /** `GET /orbs/earning-rules` — Get all active earning rules */
+  orbsEarningRules: () => '/orbs/earning-rules' as const,
+
+  // ── Shop ─────────────────────────────────────────────────
+
+  /** `GET /shop/items` — List all available shop items */
+  shopItems: () => '/shop/items' as const,
+
+  /** `GET /shop/items/:id` — Get a single shop item */
+  shopItem: (itemId: Snowflake) => `/shop/items/${itemId}` as const,
+
+  /** `POST /shop/purchase` — Purchase an item */
+  shopPurchase: () => '/shop/purchase' as const,
+
+  /** `GET /shop/inventory` — Get user's inventory */
+  shopInventory: () => '/shop/inventory' as const,
+
+  /** `POST /shop/equip` — Equip or unequip an item */
+  shopEquip: () => '/shop/equip' as const,
+
 } as const;

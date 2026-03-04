@@ -33,3 +33,22 @@ export type {
   ServerSurgeInfo,
   SurgeActionResult,
 } from './SurgeManager';
+export { OrbsManager } from './OrbsManager';
+export type {
+  OrbsBalance,
+  OrbsTransaction,
+  OrbsTransactionList,
+  DailyClaimResult,
+  DailyStatus,
+  OrbsEarningRule,
+} from './OrbsManager';
+export { ShopManager } from './ShopManager';
+export type {
+  ShopItem,
+  ShopItemType,
+  ShopItemRarity,
+  InventoryItem,
+  PurchaseResult,
+  EquipResult,
+  ShopListOptions,
+} from './ShopManager';
